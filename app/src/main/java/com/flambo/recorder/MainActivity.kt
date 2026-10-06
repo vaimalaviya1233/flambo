@@ -279,21 +279,56 @@ class MainActivity : ComponentActivity() {
 
     private fun handleShortcutIntent(intent: Intent?) {
         val action = intent?.action ?: return
-        if (action != RecordingShortcut.ACTION_START_RECORDING &&
-            action != RecordingShortcut.ACTION_PAUSE_RECORDING) return
+        val known = setOf(
+            RecordingShortcut.ACTION_START_RECORDING, RecordingShortcut.ACTION_PAUSE_RECORDING,
+            RecordingShortcut.ACTION_RECORD, RecordingShortcut.ACTION_PAUSE,
+            RecordingShortcut.ACTION_STOP, RecordingShortcut.ACTION_TOGGLE_RECORD_PAUSE,
+            RecordingShortcut.ACTION_TOGGLE_RECORD_STOP
+        )
+        if (action !in known) return
 
         intent.action = null
         setIntent(intent)
-        RecordingShortcut.reportUsed(this,
-            if (action == RecordingShortcut.ACTION_START_RECORDING) RecordingShortcut.ID_START
-            else RecordingShortcut.ID_PAUSE
-        )
         val interactive = isScreenInteractive()
-        when (action) {
-            RecordingShortcut.ACTION_START_RECORDING -> lifecycleScope.launch { startFromExternal() }
-            RecordingShortcut.ACTION_PAUSE_RECORDING -> lifecycleScope.launch { pauseFromExternal() }
+        lifecycleScope.launch {
+            when (action) {
+                RecordingShortcut.ACTION_START_RECORDING -> startFromExternal()
+                RecordingShortcut.ACTION_PAUSE_RECORDING -> pauseFromExternal()
+                RecordingShortcut.ACTION_RECORD -> recordOnlyFromExternal()
+                RecordingShortcut.ACTION_PAUSE -> pauseOnlyFromExternal()
+                RecordingShortcut.ACTION_STOP -> stopFromExternal()
+                RecordingShortcut.ACTION_TOGGLE_RECORD_PAUSE -> toggleRecordPauseFromExternal()
+                RecordingShortcut.ACTION_TOGGLE_RECORD_STOP -> startFromExternal() // same semantics
+            }
         }
         if (!interactive) moveTaskToBack(true)
+    }
+
+    // Explicit Record: no-op if already recording (vs. startFromExternal's toggle-to-stop).
+    private suspend fun recordOnlyFromExternal() {
+        if (app.recorder.state.value.isRecording) return
+        startFromExternal()
+    }
+
+    private suspend fun pauseOnlyFromExternal() {
+        val s = app.recorder.state.value
+        if (s.isRecording && !s.isPaused) app.recorder.pause()
+    }
+
+    private suspend fun stopFromExternal() {
+        if (app.recorder.state.value.isRecording) {
+            app.recorder.stop()
+            RecordingShortcut.refresh(this, false, false)
+        }
+    }
+
+    private suspend fun toggleRecordPauseFromExternal() {
+        val s = app.recorder.state.value
+        when {
+            !s.isRecording -> recordOnlyFromExternal()
+            s.isPaused -> app.recorder.resume()
+            else -> app.recorder.pause()
+        }
     }
 
     private suspend fun startFromExternal() {

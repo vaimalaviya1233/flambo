@@ -201,7 +201,9 @@ fun RecordingCard(
                     } else {
                         Text(
                             text = displayedDuration,
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontFeatureSettings = "tnum"
+                            ),
                             color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

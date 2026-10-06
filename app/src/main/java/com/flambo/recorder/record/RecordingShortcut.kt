@@ -13,6 +13,14 @@ object RecordingShortcut {
     const val ACTION_START_RECORDING = "com.flambo.recorder.ACTION_START_RECORDING"
     const val ACTION_PAUSE_RECORDING = "com.flambo.recorder.ACTION_PAUSE_RECORDING"
 
+    // Discrete Key Mapper / automation actions (static shortcuts): unlike the
+    // two toggles above, these never relabel and each does exactly one thing.
+    const val ACTION_RECORD = "com.flambo.recorder.ACTION_RECORD"
+    const val ACTION_PAUSE = "com.flambo.recorder.ACTION_PAUSE"
+    const val ACTION_STOP = "com.flambo.recorder.ACTION_STOP"
+    const val ACTION_TOGGLE_RECORD_PAUSE = "com.flambo.recorder.ACTION_TOGGLE_RECORD_PAUSE"
+    const val ACTION_TOGGLE_RECORD_STOP = "com.flambo.recorder.ACTION_TOGGLE_RECORD_STOP"
+
     const val ID_START = "start_recording"
     const val ID_PAUSE = "pause_recording"
 
